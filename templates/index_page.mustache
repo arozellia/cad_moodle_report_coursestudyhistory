@@ -1,0 +1,116 @@
+<header>
+    <div class="card-group">
+        <div class="card border-0 bg-light mb-3">
+            <div class="card-header"><strong>Profile information</strong></div>
+            <div class="card-body text-center">
+                {{#userpicture}}
+                    <div class="myprofileitem picture">
+                        {{{ userpicture }}}
+                    </div>
+                {{/userpicture}}
+                <br />
+               <a href="mailto:{{useremail}}" role="button" class="btn btn-secondary btn-sm">{{useremail}}</a>
+            </div>
+        </div>
+        <div class="card border-0 bg-light mb-3">
+            <div class="card-header"><strong>Site navigation</strong></div>
+            <div class="card-body">
+                {{# pix }} t/message, core{{/ pix }} <a class="text-muted y2" href="{{messageurl}}">{{# str }} messages, message {{/ str }}</a>
+                <br />
+                {{# pix }} t/preferences, core{{/ pix }} <a class="text-muted y2" href="{{prefencesurl}}">{{# str }} preferences {{/ str }}</a>
+                <br />
+                {{# pix }} t/passwordunmask-edit, core{{/ pix }} <a class="text-muted y2" href="{{passwordurl}}">{{# str }} changepassword {{/ str }}</a>
+            </div>
+        </div>
+        <div class="card border-0 bg-light mb-3">
+            <div class="card-header text-center"><strong>Course completion</strong></div>
+            <div class="card-body">
+                <canvas id="myChart" ></canvas>
+            </div>
+        </div>
+    </div>
+</header>
+<div>
+
+<table class="table table-striped">
+    <thead>
+        <th scope="col">Course</th>
+        <th scope="col">Course Module</th>
+        <th scope="col">Date Enrolled</th>
+        <th scope="col">Complete</th>
+        <th scope="col">Score</th>
+        <th  scope="col" style="text-align: center;">Certificate?</th>
+    </thead>
+    <tbody>
+    {{#coursehistorydata}}
+        {{#coursedata}}
+            <tr class="table-active">
+                <td><a href="../../course/view.php?id={{courseid}}">{{fullname}}</a></td>
+                <td>&nbsp;</td>
+                <td>{{timeenrolled}}</td>
+                <td class="text-center">{{coursecompleted}}</td>
+                <td class="text-center">{{coursegrade}}</td>
+                <td class="text-center">{{certificateissued}}</td>
+            </tr>
+            {{#gradeitems}}
+                <tr scope="row">
+                    <td></td>
+                    <td>{{itemname}}</td>
+                    <td></td>
+                    <td class="text-center">{{assignmentcompleted}}</td>
+                    <td class="text-center">{{finalgrade}}</td>
+                    <td class="text-center">&nbsp;</td>
+                </tr>
+            {{/gradeitems}}
+        {{/coursedata}}
+    {{/coursehistorydata}}
+    </tbody>
+</table>
+
+{{#js}}
+    require(['core/chartjs-lazy'], function(Chart) {
+        var ctx = document.getElementById('myChart');
+
+        new Chart(ctx, {
+            type: 'doughnut',
+                data: {
+                datasets: [{
+                    label: "Completed courses",
+                    backgroundColor: ["#3e95cd"],
+                    data: [{{percentcompleted}}, 100-{{percentcompleted}}]
+                }],
+              labels: [
+                      'Completed: ' + {{coursescompleted}},
+                      'To complete: ' +  {{coursestocomplete}}
+                  ]
+            },
+            series: [{
+                type: "doughnut",
+                argumentField: "region",
+                label: {
+                    visible: true,
+                    format: "millions",
+                    connector: {
+                        visible: true
+                    }
+                }
+            }],
+            options: {
+                tooltip: {
+                    enabled: true,
+                    format: "millions",
+                    percentPrecision: 2,
+                    customizeText: function() {
+                        return this.valueText + " - " + this.percentText;
+                    }
+                },
+                title: {
+                    display: false,
+                    text: 'Completed courses'
+                }
+            }
+        });
+        Chart.defaults.polarArea.animation.animateScale = true;
+        return Chart;
+    });
+{{/js}}
