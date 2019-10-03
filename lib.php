@@ -16,7 +16,7 @@ function report_coursestudyhistory_myprofile_navigation(core_user\output\myprofi
     if (isguestuser($user)) {
         return false;
     }
-    $category = new core_user\output\myprofile\category('coursestudyhistory', 'Course and Study history', 'reports');
+    $category = new core_user\output\myprofile\category('coursestudyhistory', 'My Progress and Results', 'contact');
     $tree->add_category($category);
     
     if ($course === null) {
