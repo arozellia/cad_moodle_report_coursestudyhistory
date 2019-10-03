@@ -27,19 +27,24 @@ class coursehistory
 	public function get_completion_data() : stdClass {
 		global $DB; 
 		
-		$sql = "select round(count(distinct cert.course + ccert.course)  / count(distinct ctx.instanceid), 2) * 100 as percentcompleted
-					, count(distinct cert.course) AS coursescompleted
-					, count(distinct ctx.instanceid) AS coursestocomplete
+		$sql = "select ifnull(round((sum(case when cc.timecompleted is not null then 1 else 0 end )/ count(c.id)) * 100),0) as percentcompleted
+					, count(c.id) as coursestocomplete
+				    , sum(case when cc.timecompleted is not null then 1 else 0 end ) as coursescompleted
 				from {role_assignments} ra
 				inner join {context} ctx on ctx.id = ra.contextid and ctx.contextlevel = 50
-			    inner join mdl_course c on c.id = ctx.instanceid and c.visible = 1
-				left outer join {certificate} cert on cert.course = ctx.instanceid
-				left outer join {certificate_issues} issues on issues.certificateid = cert.id
-				left outer join {customcert} ccert on cert.course = ctx.instanceid
-				left outer join {customcert_issues} cissues on issues.certificateid = cert.id
+				inner join {course} c on c.id = ctx.instanceid and c.visible = 1
+				inner join {course_completions} cc on cc.course = c.id and cc.userid = ra.userid
 				where ra.userid = ?
-				and ra.roleid = 5";
+				and ra.roleid = 5
+				group by ra.userid";
 		$result = $DB->get_record_sql($sql, [$this->userId]);
+		
+		if (!$result) {
+			$result = new stdClass();
+			$result->percentcompleted = 0;
+			$result->coursestocomplete = 0;
+			$result->coursescompleted = 0;
+		}
 		
 		return $result;
 	}
@@ -128,10 +133,10 @@ class coursehistory
 		                u.firstname,
 		                u.lastname,
 		                CASE
-		                  WHEN gi.itemtype = 'course' THEN NULL
+		                  WHEN gi.itemtype = 'course' OR gi.hidden = 1 THEN NULL
 		                  ELSE gi.itemname
 		                end                                                AS itemname,
-		                ((gg.finalgrade/gi.grademax) * 100) as finalgrade,
+		                round(((gg.finalgrade/gi.grademax) * 100)) as finalgrade,
                  		gi.id as gradeitemid,
 		                Coalesce((SELECT Min(tue.timestart)
 		                          FROM   {user_enrolments} tue
@@ -178,7 +183,7 @@ class coursehistory
 	                               AND iissues.userid = u.id) 
 	                               , 0)        AS
 		                certificateissued,
-		                (SELECT round(finalgrade, 2) as finalgrade
+		                (SELECT round(finalgrade) as finalgrade
 		                 FROM   {grade_grades} fgg
 		                        INNER JOIN {grade_items} fgi
 		                                ON fgg.itemid = fgi.id
@@ -186,7 +191,7 @@ class coursehistory
 		                        AND fgi.courseid = c.id
 		                        AND fgg.userid = u.id)                     AS
 		                coursegrade,
-		                (SELECT sgi.sortorder
+		                (SELECT case when gi.hidden = 1 or gi.itemtype = 'course' then 0 else sgi.sortorder end
 		                 FROM   {grade_items} sgi
 		                 WHERE  sgi.id = gi.id)                            AS sortorder
 		FROM   {user} u
@@ -197,24 +202,32 @@ class coursehistory
 		                  AND ctx.contextlevel = 50
 		       INNER JOIN {course} c
 		               ON c.id = ctx.instanceid
-		                  AND c.visible = 1
-		       INNER JOIN {course_modules} cm
+		       LEFT OUTER JOIN {course_modules} cm
 		               ON cm.course = c.id
 		                  AND cm.course = c.id
-		       INNER JOIN {grade_items} gi
+		       LEFT OUTER JOIN {grade_items} gi
 		               ON gi.courseid = c.id
+		                   		-- Courses with visible assignments or a checklist. 
 		                  AND ( ( gi.iteminstance = cm.instance
 		                          AND ( gi.itemmodule = 'checklist'
 		                                 OR gi.hidden = 0 )
 		                          AND gi.itemtype <> 'course'
 		                          AND gi.itemname IS NOT NULL )
+		                   		-- Courses with no assignments.
 		                         OR NOT EXISTS (SELECT 1
 		                                        FROM   {grade_items} egi
 		                                        WHERE  gi.courseid = egi.courseid
-		                                               AND egi.itemtype <> 'course') )
+		                                               AND egi.itemtype <> 'course') 
+		                   		 -- Courses with no visible assignments.
+	                             OR NOT EXISTS (SELECT 1
+                                        FROM   mdl_grade_items egi
+                                        WHERE  gi.courseid = egi.courseid
+                                               AND egi.itemtype <> 'course'
+                                               and egi.hidden = 0))
 		       LEFT OUTER JOIN {grade_grades} gg
 		                    ON gg.userid = u.id
-		                       AND gg.itemid = gi.id
+		                    AND gg.itemid = gi.id
+		                   	AND gi.hidden = 0
 		       LEFT OUTER JOIN {course_completions} cc
 		                    ON cc.userid = u.id
 		                       AND cc.course = c.id
@@ -229,8 +242,8 @@ class coursehistory
 		          c.fullname,
 		          sortorder,
 		          itemname";
-
-	    $result = $DB->get_records_sql($sql, [$this->userId]);
+		
+	   $result = $DB->get_records_sql($sql, [$this->userId]);
 	 
         return $result;
     }
