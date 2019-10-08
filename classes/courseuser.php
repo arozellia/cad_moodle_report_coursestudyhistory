@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace report_coursestudyhistory;
 
+use invalid_parameter_exception;
 use stdClass;
 
 /**
@@ -45,17 +46,22 @@ class courseuser
     {
         $this->userId = $userId;
     }
-
-    /**
-     * @return stdClass
-     * @throws \dml_exception
-     */
+	
+	/**
+	 * @return stdClass
+	 * @throws \dml_exception
+	 * @throws invalid_parameter_exception
+	 */
     public function getUserDetails(): stdClass
     {
         global $OUTPUT, $DB;
 
         $user = $DB->get_record('user', array('id'=> $this->getUserId()));
-
+		
+        if (!$user) {
+	        throw new invalid_parameter_exception('User id not exist: '. $this->getUserId());
+        }
+        
         $userData = $user;
         $userData->userpicture = $OUTPUT->user_picture($user, array('size' => $this->userPictureSize));
 

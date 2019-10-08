@@ -41,7 +41,7 @@ $PAGE->set_context($context);
 $PAGE->set_pagelayout('report');
 $PAGE->set_cacheable(false);
 
-$title = get_string('pluginname', 'report_coursestudyhistory')
+$title = get_string('usertitle', 'report_coursestudyhistory')
 	. ' for '
 	. $courseuser->getUserDetails()->firstname
 	. ' '

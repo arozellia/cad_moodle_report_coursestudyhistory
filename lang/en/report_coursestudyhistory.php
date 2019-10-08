@@ -26,6 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Course and Study History';
+$string['usertitle'] = 'My Progress and Results';
 $string['privacy:metadata'] = 'The Course and Study History plugin only displays existing course data.';
 $string['coursestudyhistory:view'] = 'Course and Study History';
 

@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $plugin = new \stdClass();
 $plugin->component = 'report_coursestudyhistory';
 $plugin->release = '0.1.0';
-$plugin->version = 2019092800;
+$plugin->version = 2019092801;
 $plugin->requires = 2018120300;
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->depenencies = [

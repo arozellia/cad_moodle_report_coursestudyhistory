@@ -48,16 +48,16 @@
                 <td><a href="../../course/view.php?id={{courseid}}">{{fullname}}</a></td>
                 <td>&nbsp;</td>
                 <td>{{timeenrolled}}</td>
-                <td class="text-center">{{coursecompleted}}</td>
+                <td class="text-center">{{{coursecompleted}}}</td>
                 <td class="text-center">{{coursegrade}}</td>
-                <td class="text-center">{{certificateissued}}</td>
+                <td class="text-center">{{{certificateissued}}}</td>
             </tr>
             {{#gradeitems}}
                 <tr scope="row">
                     <td></td>
                     <td>{{itemname}}</td>
                     <td></td>
-                    <td class="text-center">{{assignmentcompleted}}</td>
+                    <td class="text-center">{{{assignmentcompleted}}}</td>
                     <td class="text-center">{{finalgrade}}</td>
                     <td class="text-center">&nbsp;</td>
                 </tr>
@@ -96,13 +96,8 @@
                 }
             }],
             options: {
-                tooltip: {
-                    enabled: true,
-                    format: "millions",
-                    percentPrecision: 2,
-                    customizeText: function() {
-                        return this.valueText + " - " + this.percentText;
-                    }
+                tooltips: {
+                    enabled: false
                 },
                 title: {
                     display: false,
