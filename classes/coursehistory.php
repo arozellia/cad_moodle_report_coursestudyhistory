@@ -128,14 +128,16 @@ class coursehistory {
 	                               INNER JOIN mdl_certificate_issues iissues
 	                                       ON iissues.certificateid = icert.id
 	                        WHERE  icert.course = c.id
-	                               AND iissues.userid = u.id)
+	                               AND iissues.userid = u.id
+	                               LIMIT 1)
 	                               ,
 							(SELECT 1
 	                        from mdl_customcert icert
 		                        inner join mdl_customcert_issues iissues
 		                        on iissues.customcertid = icert.id
 	                        WHERE  icert.course = c.id
-	                               AND iissues.userid = u.id) 
+	                               AND iissues.userid = u.id
+	                               LIMIT 1) 
 	                               , 0)        AS
 		                certificateissued,
 		                (SELECT round(finalgrade) as finalgrade
